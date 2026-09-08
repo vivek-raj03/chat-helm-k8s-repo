@@ -1,0 +1,9 @@
+apiVersion: v2
+name: chat-core
+description: Core chat sending/messaging backend service for the chat application
+
+type: application
+
+version: 0.1.0
+
+appVersion: "0.1.0"  # TODO: set to match your actual app image tag once available

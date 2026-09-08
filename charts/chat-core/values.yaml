@@ -1,0 +1,67 @@
+replicaCount: 2
+
+image:
+  repository: "" # to create the ECR REpo Infra 
+  pullPolicy: IfNotPresent
+  tag: "" # todo real image tag
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  # TODO: once IRSA role exists, add:
+  # eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/chat-core-irsa-role
+  name: ""
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  className: "alb"
+  annotations: {
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    # WebSocket connections idle-timeout - ALB default is 60s, too short for chat
+    # alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=3600
+  }
+  hosts:
+    - host: chart-example.local  # Real Domain
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+   # TODO once you have a domain + ACM cert:
+    # - secretName: chat-core-tls
+    #   hosts:
+    #     - chat.example.com
+
+resources: {} 
+  requests:
+    cpu: 250m
+    memory: 256mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /   # TODO: replace with real health endpoint once app defines one, e.g. /health
+    port: http 
+readinessProbe:
+  httpGet:
+    path: /     # TODO: replace with real health endpoint once app defines one, e.g. /health
+    port: http
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
